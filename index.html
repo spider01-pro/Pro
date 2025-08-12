@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Python Online Runner</title>
+<script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+* {
+margin: 0;
+padding: 0;
+box-sizing: border-box;
+}
+
+body {
+font-family: 'Roboto', sans-serif;
+background: linear-gradient(135deg, #1a2a6c, #b21f1f, #1a2a6c);
+color: #f0f0f0;
+min-height: 100vh;
+padding: 20px;
+display: flex;
+flex-direction: column;
+align-items: center;
+}
+
+.container {
+width: 100%;
+max-width: 1200px;
+margin: 0 auto;
+}
+
+header {
+text-align: center;
+padding: 20px 0;
+margin-bottom: 30px;
+}
+
+h1 {
+font-size: 2.8rem;
+margin-bottom: 10px;
+text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+background: linear-gradient(to right, #ff7e5f, #feb47b);
+-webkit-background-clip: text;
+-webkit-text-fill-color: transparent;
+}
+
+.subtitle {
+font-size: 1.2rem;
+opacity: 0.9;
+max-width: 800px;
+margin: 0 auto;
+line-height: 1.6;
+}
+
+.main-content {
+display: grid;
+grid-template-columns: 1fr 1fr;
+gap: 30px;
+margin-bottom: 30px;
+}
+
+@media (max-width: 900px) {
+.main-content {
+grid-template-columns: 1fr;
+}
+}
+
+.panel {
+background: rgba(30, 30, 50, 0.85);
+border-radius: 12px;
+padding: 25px;
+box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+backdrop-filter: blur(8px);
+border: 1px solid rgba(255, 255, 255, 0.1);
+display: flex;
+flex-direction: column;
+}
+
+.panel-title {
+font-size: 1.5rem;
+margin-bottom: 20px;
+color: #64b5f6;
+display: flex;
+align-items: center;
+gap: 10px;
+}
+
+.panel-title i {
+font-size: 1.3rem;
+}
+
+.editor-container {
+flex: 1;
+display: flex;
+flex-direction: column;
+}
+
+textarea {
+width: 100%;
+flex: 1;
+background: rgba(20, 20, 35, 0.8);
+color: #e0e0e0;
+border: 1px solid rgba(100, 100, 150, 0.5);
+border-radius: 8px;
+padding: 15px;
+font-family: 'Roboto Mono', monospace;
+font-size: 15px;
+resize: none;
+margin-bottom: 15px;
+box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+textarea:focus {
+outline: none;
+border-color: #64b5f6;
+}
+
+.output-container {
+background: rgba(20, 20, 35, 0.8);
+border-radius: 8px;
+padding: 20px;
+min-height: 200px;
+font-family: 'Roboto Mono', monospace;
+white-space: pre-wrap;
+overflow-y: auto;
+max-height: 400px;
+box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+.controls {
+display: flex;
+gap: 15px;
+margin-top: 20px;
+flex-wrap: wrap;
+}
+
+button {
+padding: 12px 25px;
+background: linear-gradient(to right, #4a00e0, #8e2de2);
+color: white;
+border: none;
+border-radius: 50px;
+font-size: 16px;
+font-weight: 500;
+cursor: pointer;
+transition: all 0.3s ease;
+display: flex;
+align-items: center;
+gap: 8px;
+box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+button:hover {
+transform: translateY(-2px);
+box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+button:active {
+transform: translateY(0);
+}
+
+#runBtn {
+background: linear-gradient(to right, #00b09b, #96c93d);
+}
+
+#clearBtn {
+background: linear-gradient(to right, #ff416c, #ff4b2b);
+}
+
+.examples {
+margin-top: 15px;
+}
+
+.examples select {
+width: 100%;
+background: rgba(20, 20, 35, 0.8);
+color: #e0e0e0;
+border: 1px solid rgba(100, 100, 150, 0.5);
+border-radius: 8px;
+padding: 12px;
+font-size: 15px;
+margin-bottom: 10px;
+}
+
+.status {
+margin-top: 15px;
+padding: 12px;
+background: rgba(0, 0, 0, 0.3);
+border-radius: 8px;
+text-align: center;
+font-size: 14px;
+}
+
+.features {
+display: grid;
+grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+gap: 20px;
+margin-top: 30px;
+}
+
+.feature-card {
+background: rgba(30, 30, 50, 0.7);
+border-radius: 10px;
+padding: 20px;
+border: 1px solid rgba(100, 100, 150, 0.3);
+}
+
+.feature-card h3 {
+color: #64b5f6;
+margin-bottom: 10px;
+font-size: 1.2rem;
+}
+
+footer {
+text-align: center;
+padding: 30px 0 20px;
+font-size: 0.9rem;
+opacity: 0.8;
+width: 100%;
+margin-top: auto;
+}
+
+.loader {
+display: none;
+width: 24px;
+height: 24px;
+border: 3px solid rgba(255,255,255,0.3);
+border-radius: 50%;
+border-top-color: #64b5f6;
+animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+to { transform: rotate(360deg); }
+}
+
+.success { color: #4ade80; }
+.error { color: #f87171; }
+</style>
+</head>
+<body>
+<div class="container">
+<header>
+<h1>Python Online Runner</h1>
+<p class="subtitle">Run Python code directly in your browser with Pyodide. All standard libraries are supported. Write your code, click Run, and see the output instantly!</p>
+</header>
+
+<div class="main-content">
+<div class="panel">
+<h2 class="panel-title">
+<span>Python Code Editor</span>
+</h2>
+<div class="editor-container">
+<textarea id="code" spellcheck="false"># Welcome to Python Online Runner!
+# Try these examples or write your own code
+
+# Calculate factorial
+def factorial(n):
+if n == 0:
+return 1
+else:
+return n * factorial(n-1)
+
+print(factorial(5))
+
+# Generate Fibonacci sequence
+def fibonacci(n):
+a, b = 0, 1
+for _ in range(n):
+print(a, end=' ')
+a, b = b, a+b
+
+fibonacci(10)
+
+# Working with datetime
+from datetime import datetime
+now = datetime.now()
+print(f"\n\nCurrent date and time: {now.strftime('%Y-%m-%d %H:%M:%S')}")</textarea>
+
+<div class="examples">
+<select id="examples">
+<option value="">Load an example...</option>
+<option value="matplotlib">Matplotlib Plotting</option>
+<option value="numpy">Numpy Operations</option>
+<option value="pandas">Pandas Data Analysis</option>
+<option value="requests">HTTP Requests</option>
+<option value="sorting">Sorting Algorithms</option>
+</select>
+</div>
+
+<div class="controls">
+<button id="runBtn">
+<span>Run Code</span>
+</button>
+<button id="clearBtn">
+<span>Clear Output</span>
+</button>
+</div>
+</div>
+</div>
+
+<div class="panel">
+<h2 class="panel-title">
+<span>Program Output</span>
+</h2>
+<div class="output-container" id="output"></div>
+<div class="status" id="status">
+Pyodide is loading... Please wait
+<div class="loader"></div>
+</div>
+</div>
+</div>
+
+<div class="features">
+<div class="feature-card">
+<h3>Complete Python Environment</h3>
+<p>Run Python 3.10 with access to all standard libraries. Pyodide includes scientific libraries like NumPy, Pandas, and Matplotlib.</p>
+</div>
+<div class="feature-card">
+<h3>No Server Required</h3>
+<p>Your code runs entirely in the browser using WebAssembly. No code is sent to any server - execution is completely client-side.</p>
+</div>
+<div class="feature-card">
+<h3>Safe & Secure</h3>
+<p>Browser-based execution means your code runs in a secure sandbox without access to your local files or system resources.</p>
+</div>
+</div>
+
+<footer>
+<p>Powered by Pyodide | Python 3.10 | WebAssembly</p>
+<p>Note: Some advanced libraries may have limitations in the browser environment</p>
+</footer>
+</div>
+
+<script>
+// Initialize Pyodide
+let pyodide;
+let isLoading = true;
+
+async function initializePyodide() {
+const statusElement = document.getElementById('status');
+const loader = statusElement.querySelector('.loader');
+loader.style.display = 'inline-block';
+
+try {
+statusElement.textContent = "Loading Pyodide runtime...";
+pyodide = await loadPyodide({
+indexURL: "https://cdn.jsdelivr.net/pyodide/v0.25.0/full/"
+});
+
+// Load required packages
+statusElement.textContent = "Loading standard libraries...";
+await pyodide.loadPackage(["micropip", "numpy", "pandas", "matplotlib"]);
+
+statusElement.innerHTML = '<span class="success">Pyodide loaded successfully! Ready to run Python code.</span>';
+isLoading = false;
+} catch (error) {
+console.error("Error loading Pyodide:", error);
+statusElement.innerHTML = `<span class="error">Failed to load Pyodide: ${error.message}</span>`;
+} finally {
+loader.style.display = 'none';
+}
+}
+
+// Run Python code
+async function runPython() {
+if (isLoading) {
+document.getElementById('status').innerHTML = '<span class="error">Pyodide is still loading. Please wait...</span>';
+return;
+}
+
+const code = document.getElementById('code').value;
+const outputElement = document.getElementById('output');
+const statusElement = document.getElementById('status');
+
+outputElement.textContent = "Running your code...";
+statusElement.textContent = "Executing...";
+
+try {
+// Capture print statements
+pyodide.runPython(`
+import sys
+from io import StringIO
+sys.stdout = StringIO()
+`);
+
+// Run the user's code
+await pyodide.runPythonAsync(code);
+
+// Get the captured output
+const output = pyodide.runPython("sys.stdout.getvalue()");
+outputElement.textContent = output;
+statusElement.innerHTML = '<span class="success">Execution completed successfully!</span>';
+} catch (error) {
+console.error(error);
+outputElement.textContent = error.message;
+statusElement.innerHTML = `<span class="error">Error: ${error.message.split('\n')[0]}</span>`;
+}
+}
+
+// Clear output
+function clearOutput() {
+document.getElementById('output').textContent = "";
+document.getElementById('status').textContent = "Output cleared";
+}
+
+// Load examples
+function loadExample() {
+const exampleSelect = document.getElementById('examples');
+const selectedExample = exampleSelect.value;
+let code = "";
+
+switch(selectedExample) {
+case "matplotlib":
+code = `# Matplotlib Example
+import matplotlib.pyplot as plt
+import numpy as np
+
+# Generate data
+x = np.linspace(0, 2*np.pi, 100)
+y = np.sin(x)
+z = np.cos(x)
+
+# Create plot
+plt.figure(figsize=(8, 6))
+plt.plot(x, y, label='sin(x)', color='blue', linewidth=2)
+plt.plot(x, z, label='cos(x)', color='red', linestyle='dashed', linewidth=2)
+plt.title('Trigonometric Functions')
+plt.xlabel('x')
+plt.ylabel('y')
+plt.grid(True, linestyle='--', alpha=0.7)
+plt.legend()
+plt.show()
+
+# Display the plot in Pyodide
+fig = plt.gcf()
+fig`;
+break;
+
+case "numpy":
+code = `# Numpy Example
+import numpy as np
+
+# Create arrays
+a = np.array([1, 2, 3, 4, 5])
+b = np.array([6, 7, 8, 9, 10])
+
+# Perform operations
+print("Array a:", a)
+print("Array b:", b)
+print("a + b:", a + b)
+print("a * 2:", a * 2)
+print("Dot product:", np.dot(a, b))
+
+# Create a matrix
+matrix = np.array([[1, 2], [3, 4]])
+print("\\nMatrix:\\n", matrix)
+print("Matrix determinant:", np.linalg.det(matrix))`;
+break;
+
+case "pandas":
+code = `# Pandas Example
+import pandas as pd
+import numpy as np
+
+# Create DataFrame
+data = {
+'Name': ['Alice', 'Bob', 'Charlie', 'David', 'Eva'],
+'Age': [25, 30, 35, 40, 45],
+'Salary': [50000, 60000, 70000, 80000, 90000],
+'Department': ['HR', 'IT', 'Finance', 'IT', 'HR']
+}
+
+df = pd.DataFrame(data)
+print("Original DataFrame:")
+print(df)
+
+# Data manipulation
+print("\\nAverage salary by department:")
+print(df.groupby('Department')['Salary'].mean())
+
+print("\\nPeople over 35:")
+print(df[df['Age'] > 35])`;
+break;
+
+case "requests":
+code = `# HTTP Requests Example
+import requests
+
+# Make a GET request
+print("Making a request to example.com...")
+response = requests.get("https://example.com")
+
+# Display results
+print("Status Code:", response.status_code)
+print("Headers:")
+for key, value in response.headers.items():
+print(f" {key}: {value}")
+
+print("\\nFirst 200 characters of content:")
+print(response.text[:200])`;
+break;
+
+case "sorting":
+code = `# Sorting Algorithms Example
+import time
+import random
+
+# Generate random data
+data = [random.randint(1, 1000) for _ in range(1000)]
+print(f"Generated {len(data)} random numbers")
+
+# Bubble Sort
+def bubble_sort(arr):
+n = len(arr)
+for i in range(n):
+for j in range(0, n-i-1):
+if arr[j] > arr[j+1]:
+arr[j], arr[j+1] = arr[j+1], arr[j]
+return arr
+
+# Time sorting algorithms
+start = time.time()
+sorted_data = sorted(data) # Built-in Timsort
+print(f"Timsort time: {time.time() - start:.6f} seconds")
+
+start = time.time()
+bubble_sorted = bubble_sort(data.copy())
+print(f"Bubble sort time: {time.time() - start:.6f} seconds")
+
+# Verify sorts
+print("Sorts match:", sorted_data == bubble_sorted)`;
+break;
+}
+
+if (code) {
+document.getElementById('code').value = code;
+exampleSelect.value = "";
+}
+}
+
+// Event listeners
+document.addEventListener('DOMContentLoaded', function() {
+initializePyodide();
+
+document.getElementById('runBtn').addEventListener('click', runPython);
+document.getElementById('clearBtn').addEventListener('click', clearOutput);
+document.getElementById('examples').addEventListener('change', loadExample);
+});
+</script>
+</body>
+</html>
